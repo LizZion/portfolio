@@ -24,31 +24,36 @@
     });
 
     // Scroll entre as abas
-    let scrollLocked = false;
-
+    let scrollAmount = 0;
+    let scrollTimeout;
+    
     window.addEventListener("wheel", function (event) {
-        if (scrollLocked) return;
-
         const activeIndex = buttons.findIndex(button =>
             button.classList.contains("active-btn")
         );
-
-        // Scroll para baixo
-        if (event.deltaY > 0) {
+    
+        // Acumula a força do scroll
+        scrollAmount += event.deltaY;
+    
+        // Só troca depois de um scroll mais intencional
+        const threshold = 350;
+    
+        if (scrollAmount > threshold) {
             changeTab(activeIndex + 1);
+            scrollAmount = 0;
         }
-
-        // Scroll para cima
-        else if (event.deltaY < 0) {
+    
+        else if (scrollAmount < -threshold) {
             changeTab(activeIndex - 1);
+            scrollAmount = 0;
         }
-
-        // Evita trocar 5 abas com uma única girada
-        scrollLocked = true;
-
-        setTimeout(() => {
-            scrollLocked = false;
-        }, 600);
+    
+        // Se parar de scrollar, reseta
+        clearTimeout(scrollTimeout);
+    
+        scrollTimeout = setTimeout(() => {
+            scrollAmount = 0;
+        }, 250);
     });
 
     // Tema claro/escuro
