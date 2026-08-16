@@ -12,8 +12,10 @@
         button.classList.add("active-btn");
         document.getElementById(button.dataset.id).classList.add("active");
 
-        // Volta a aba para o topo
-        window.scrollTo(0, 0);
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
     }
 
     // Botões
@@ -23,40 +25,74 @@
         });
     });
 
-    // Scroll entre as abas
     let scrollAmount = 0;
     let scrollTimeout;
-    
+    let locked = false;
+
     window.addEventListener("wheel", function (event) {
+        if (locked) return;
+
         const activeIndex = buttons.findIndex(button =>
             button.classList.contains("active-btn")
         );
-    
-        // Acumula a força do scroll
-        scrollAmount += event.deltaY;
-    
-        // Só troca depois de um scroll mais intencional
-        const threshold = 350;
-    
+
+        const scrollTop = window.scrollY;
+
+        const documentHeight = document.documentElement.scrollHeight;
+        const windowHeight = window.innerHeight;
+
+        const atTop = scrollTop <= 5;
+
+        const atBottom =
+            scrollTop + windowHeight >= documentHeight - 20;
+
+        // Só acumula scroll para trocar quando estiver
+        // no TOPO ou no FINAL da página
+        if (
+            (event.deltaY > 0 && atBottom) ||
+            (event.deltaY < 0 && atTop)
+        ) {
+            scrollAmount += event.deltaY;
+        } else {
+            scrollAmount = 0;
+            return;
+        }
+
+        // Precisa insistir bastante no scroll
+        const threshold = 900;
+
+        // Próxima aba
         if (scrollAmount > threshold) {
             changeTab(activeIndex + 1);
+
             scrollAmount = 0;
+            locked = true;
+
+            setTimeout(() => {
+                locked = false;
+            }, 1000);
         }
-    
+
+        // Aba anterior
         else if (scrollAmount < -threshold) {
             changeTab(activeIndex - 1);
+
             scrollAmount = 0;
+            locked = true;
+
+            setTimeout(() => {
+                locked = false;
+            }, 1000);
         }
-    
-        // Se parar de scrollar, reseta
+
         clearTimeout(scrollTimeout);
-    
+
         scrollTimeout = setTimeout(() => {
             scrollAmount = 0;
-        }, 250);
+        }, 400);
     });
 
-    // Tema claro/escuro
+    // Tema
     document.querySelector(".theme-btn").addEventListener("click", () => {
         document.body.classList.toggle("light-mode");
     });
